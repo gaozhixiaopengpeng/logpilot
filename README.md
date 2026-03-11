@@ -40,6 +40,36 @@ Worklog 会自动读取你的 Git commit 和代码 diff，然后使用 AI 自动
 npm install -g worklog
 ```
 
+本地开发（本仓库）：
+
+```bash
+npm install
+npm run build
+node dist/cli/index.js today
+# 或 npm link 后直接使用 worklog
+```
+
+AI 需要 **OpenAI 兼容 API**。默认提供方为 **OpenAI 兼容**；也可选用 **DeepSeek**。
+
+CLI 会在**当前工作目录**自动加载 `.env`（无需手动 `export`）。复制 `.env.example` 为 `.env` 并填写 Key 即可。
+
+**环境变量：**
+
+| 变量 | 说明 |
+|------|------|
+| `WORKLOG_PROVIDER` | `openai`（默认）或 `deepseek` |
+| `WORKLOG_API_KEY` / `OPENAI_API_KEY` | OpenAI 兼容 API Key |
+| `DEEPSEEK_API_KEY` | DeepSeek 专用 Key（可选；不填则用 `WORKLOG_API_KEY`） |
+| `WORKLOG_API_BASE` | 自定义网关 Base URL（可选） |
+| `WORKLOG_MODEL` | 模型名（可选；openai 默认 `gpt-4o-mini`，deepseek 默认 `deepseek-chat`） |
+
+**命令行临时切换提供方：**
+
+```bash
+worklog today --provider deepseek
+worklog week --provider openai
+```
+
 ---
 
 # 使用方法

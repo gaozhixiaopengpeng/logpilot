@@ -1,0 +1,115 @@
+import axios from 'axios';
+import { readFile } from 'fs/promises';
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/** 支持的 AI 提供方，默认 openai（OpenAI 兼容 API） */
+export type AiProvider = 'openai' | 'deepseek';
+
+const PROVIDER_DEFAULT: AiProvider = 'openai';
+
+function normalizeProvider(value: string | undefined): AiProvider {
+  const v = (value || PROVIDER_DEFAULT).toLowerCase();
+  if (v === 'deepseek') return 'deepseek';
+  return 'openai';
+}
+
+function resolveEndpoint(provider: AiProvider): {
+  baseURL: string;
+  apiKey: string | undefined;
+  model: string;
+} {
+  if (provider === 'deepseek') {
+    const baseURL =
+      process.env.WORKLOG_API_BASE ||
+      process.env.OPENAI_API_BASE_URL ||
+      'https://api.deepseek.com/v1';
+    const apiKey =
+      process.env.DEEPSEEK_API_KEY ||
+      process.env.WORKLOG_API_KEY ||
+      process.env.OPENAI_API_KEY;
+    const model = process.env.WORKLOG_MODEL || 'deepseek-chat';
+    return { baseURL, apiKey, model };
+  }
+  const baseURL =
+    process.env.WORKLOG_API_BASE ||
+    process.env.OPENAI_API_BASE_URL ||
+    'https://api.openai.com/v1';
+  const apiKey =
+    process.env.WORKLOG_API_KEY || process.env.OPENAI_API_KEY;
+  const model = process.env.WORKLOG_MODEL || 'gpt-4o-mini';
+  return { baseURL, apiKey, model };
+}
+
+function missingKeyMessage(provider: AiProvider): string {
+  if (provider === 'deepseek') {
+    return (
+      '请设置环境变量 DEEPSEEK_API_KEY（或 WORKLOG_API_KEY / OPENAI_API_KEY）后重试'
+    );
+  }
+  return '请设置环境变量 WORKLOG_API_KEY 或 OPENAI_API_KEY 后重试';
+}
+
+/**
+ * 从 prompts 目录加载模板（不读取 Git）
+ */
+async function loadPrompt(
+  name: 'daily' | 'weekly',
+  commitList: string,
+  diffBlock: string
+): Promise<string> {
+  const pkgRoot = join(__dirname, '..', '..');
+  const path = join(pkgRoot, 'prompts', `${name}.md`);
+  let text: string;
+  try {
+    text = await readFile(path, 'utf-8');
+  } catch {
+    text = await readFile(join(process.cwd(), 'prompts', `${name}.md`), 'utf-8');
+  }
+  return text
+    .replace(/\{\{COMMIT_LIST\}\}/g, commitList)
+    .replace(/\{\{DIFF_BLOCK\}\}/g, diffBlock || '(无 diff 摘要)');
+}
+
+type ChatMessage = { role: 'user' | 'system' | 'assistant'; content: string };
+
+/**
+ * 调用 LLM 生成工作总结（不读取 Git）
+ * 提供方由 WORKLOG_PROVIDER 决定，默认 openai；可选 deepseek。
+ */
+export async function summarize(
+  promptName: 'daily' | 'weekly',
+  commitList: string,
+  diffBlock: string
+): Promise<string> {
+  const provider = normalizeProvider(process.env.WORKLOG_PROVIDER);
+  const { baseURL, apiKey, model } = resolveEndpoint(provider);
+  if (!apiKey) {
+    throw new Error(missingKeyMessage(provider));
+  }
+  const content = await loadPrompt(promptName, commitList, diffBlock);
+  const messages: ChatMessage[] = [{ role: 'user', content }];
+  const url = baseURL.replace(/\/$/, '') + '/chat/completions';
+  const { data } = await axios.post(
+    url,
+    {
+      model,
+      messages,
+      temperature: 0.4,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      timeout: 120000,
+    }
+  );
+  const choice = data?.choices?.[0]?.message?.content;
+  if (!choice || typeof choice !== 'string') {
+    throw new Error('AI 返回为空，请检查 API 与模型');
+  }
+  return choice.trim();
+}

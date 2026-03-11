@@ -44,13 +44,14 @@ worklog today --repo ./project
 
 # CLI 参数
 
-| 参数       | 说明   |
-| -------- | ---- |
-| --repo   | 指定仓库 |
-| --date   | 指定日期 |
-| --since  | 起始时间 |
-| --until  | 结束时间 |
-| --format | 输出格式 |
+| 参数         | 说明 |
+| ---------- | ---- |
+| --repo     | 指定仓库 |
+| --date     | 指定日期 |
+| --provider | AI 提供方：`openai`（默认）或 `deepseek`，也可通过环境变量 `WORKLOG_PROVIDER` 设置 |
+| --since    | 起始时间 |
+| --until    | 结束时间 |
+| --format   | 输出格式 |
 
 ---
 

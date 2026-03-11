@@ -1,0 +1,39 @@
+{
+  "name": "worklog",
+  "version": "0.1.0",
+  "description": "AI 自动生成 Git 工作日报的 CLI 工具",
+  "type": "module",
+  "bin": {
+    "worklog": "./dist/cli/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "worklog",
+    "git",
+    "daily-report",
+    "cli",
+    "ai"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.7.0",
+    "commander": "^12.0.0",
+    "dotenv": "^17.3.1",
+    "simple-git": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0"
+  },
+  "files": [
+    "dist",
+    "prompts",
+    "bin"
+  ]
+}
