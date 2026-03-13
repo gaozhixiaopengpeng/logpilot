@@ -115,6 +115,12 @@ diff
 worklog today
 ```
 
+生成 commit message 并交互确认提交：
+
+```
+worklog commit
+```
+
 输出：
 
 ```

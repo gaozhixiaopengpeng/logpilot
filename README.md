@@ -93,6 +93,16 @@ worklog day --date 2026-03-10
 worklog week
 ```
 
+根据 diff 生成 commit message（确认后提交）
+
+```bash
+git add -A   # 先暂存变更
+worklog commit
+# 或使用暂存区 diff：worklog commit --staged
+# 只生成不提交：worklog commit --no-commit
+# 仅基于未暂存 diff 生成（不会执行提交）：worklog commit --work
+```
+
 指定仓库路径
 
 ```bash

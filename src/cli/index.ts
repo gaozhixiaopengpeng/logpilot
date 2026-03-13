@@ -1,10 +1,16 @@
 #!/usr/bin/env node
 import 'dotenv/config';
+import { createInterface } from 'readline';
 import { Command } from 'commander';
+import { simpleGit } from 'simple-git';
 import { getCommits } from '../git/log.js';
 import { getDiffsForCommits } from '../git/diff.js';
+import {
+  getWorkingDiff,
+  type WorkingDiffMode,
+} from '../git/working-diff.js';
 import { formatCommitList } from '../utils/format.js';
-import { summarize } from '../ai/summarize.js';
+import { summarize, generateCommitMessage } from '../ai/summarize.js';
 import {
   formatReportTitle,
   fallbackReport,
@@ -125,5 +131,101 @@ program
     const { since, until } = weekRange();
     await runReport(opts.repo, since, until, 'weekly', 'week');
   });
+
+function askLine(question: string): Promise<string> {
+  const rl = createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+  return new Promise((resolve) => {
+    rl.question(question, (answer) => {
+      rl.close();
+      resolve(answer.trim());
+    });
+  });
+}
+
+program
+  .command('commit')
+  .description('根据 diff 用 AI 生成 commit message，确认后提交（需已暂存）')
+  .option('-r, --repo <path>', '仓库路径', process.cwd())
+  .option(
+    '--staged',
+    '仅使用暂存区 diff（默认 auto：有暂存则用暂存，否则用工作区 diff 仅生成不提交）'
+  )
+  .option(
+    '--work',
+    '仅使用未暂存 diff（只生成 message，不执行 git commit）'
+  )
+  .option('--no-commit', '只生成并打印 message，不提交')
+  .option('--provider <name>', 'AI 提供方: openai（默认）| deepseek')
+  .action(
+    async (opts: {
+      repo: string;
+      staged?: boolean;
+      work?: boolean;
+      commit?: boolean;
+      provider?: string;
+    }) => {
+      applyProvider(opts.provider);
+      const repo = opts.repo;
+      let mode: WorkingDiffMode = 'auto';
+      if (opts.work) mode = 'unstaged';
+      else if (opts.staged) mode = 'staged';
+
+      const { diff, source } = await getWorkingDiff(repo, mode);
+      if (!diff.trim()) {
+        process.stderr.write('没有可分析的 diff（工作区与暂存区均无变更）。\n');
+        process.exitCode = 1;
+        return;
+      }
+
+      let message: string;
+      try {
+        message = await generateCommitMessage(diff);
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        process.stderr.write('生成失败: ' + msg + '\n');
+        process.exitCode = 1;
+        return;
+      }
+
+      if (source === 'staged') {
+        process.stdout.write(`\n${message}\n\n`);
+      } else {
+        process.stdout.write(
+          `\n--- 建议的 commit message（来源: 工作区） ---\n${message}\n---\n\n`
+        );
+      }
+
+      const noCommit = opts.commit === false || opts.work;
+      if (noCommit || source !== 'staged') {
+        if (source !== 'staged') {
+          process.stdout.write(
+            '当前 diff 来自未暂存变更，未执行提交。请先 git add 后使用 worklog commit --staged，或复制上文手动 git commit -m "..."。\n'
+          );
+        } else {
+          process.stdout.write('已使用 --no-commit，未执行提交。\n');
+        }
+        return;
+      }
+
+      const answer = await askLine('是否使用上述 message 提交暂存区? [y/N] ');
+      if (answer.toLowerCase() !== 'y' && answer.toLowerCase() !== 'yes') {
+        process.stdout.write('已取消提交。\n');
+        return;
+      }
+
+      const git = simpleGit(repo);
+      try {
+        await git.commit(message);
+        process.stdout.write('已提交。\n');
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        process.stderr.write('git commit 失败: ' + msg + '\n');
+        process.exitCode = 1;
+      }
+    }
+  );
 
 program.parse();

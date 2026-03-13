@@ -75,30 +75,29 @@ async function loadPrompt(
 
 type ChatMessage = { role: 'user' | 'system' | 'assistant'; content: string };
 
-/**
- * 调用 LLM 生成工作总结（不读取 Git）
- * 提供方由 WORKLOG_PROVIDER 决定，默认 openai；可选 deepseek。
- */
-export async function summarize(
-  promptName: 'daily' | 'weekly',
-  commitList: string,
-  diffBlock: string
-): Promise<string> {
+async function loadCommitPrompt(diffBlock: string): Promise<string> {
+  const pkgRoot = join(__dirname, '..', '..');
+  const path = join(pkgRoot, 'prompts', 'commit.md');
+  let text: string;
+  try {
+    text = await readFile(path, 'utf-8');
+  } catch {
+    text = await readFile(join(process.cwd(), 'prompts', 'commit.md'), 'utf-8');
+  }
+  return text.replace(/\{\{DIFF_BLOCK\}\}/g, diffBlock || '(无 diff)');
+}
+
+async function chatComplete(content: string, temperature = 0.4): Promise<string> {
   const provider = normalizeProvider(process.env.WORKLOG_PROVIDER);
   const { baseURL, apiKey, model } = resolveEndpoint(provider);
   if (!apiKey) {
     throw new Error(missingKeyMessage(provider));
   }
-  const content = await loadPrompt(promptName, commitList, diffBlock);
   const messages: ChatMessage[] = [{ role: 'user', content }];
   const url = baseURL.replace(/\/$/, '') + '/chat/completions';
   const { data } = await axios.post(
     url,
-    {
-      model,
-      messages,
-      temperature: 0.4,
-    },
+    { model, messages, temperature },
     {
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -112,4 +111,25 @@ export async function summarize(
     throw new Error('AI 返回为空，请检查 API 与模型');
   }
   return choice.trim();
+}
+
+/**
+ * 根据 diff 生成 commit message（不读取 Git，仅使用传入的 diff 文本）
+ */
+export async function generateCommitMessage(diffBlock: string): Promise<string> {
+  const content = await loadCommitPrompt(diffBlock);
+  return chatComplete(content, 0.3);
+}
+
+/**
+ * 调用 LLM 生成工作总结（不读取 Git）
+ * 提供方由 WORKLOG_PROVIDER 决定，默认 openai；可选 deepseek。
+ */
+export async function summarize(
+  promptName: 'daily' | 'weekly',
+  commitList: string,
+  diffBlock: string
+): Promise<string> {
+  const content = await loadPrompt(promptName, commitList, diffBlock);
+  return chatComplete(content, 0.4);
 }
