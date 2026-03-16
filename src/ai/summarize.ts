@@ -54,11 +54,15 @@ function missingKeyMessage(provider: AiProvider): string {
 
 /**
  * 从 prompts 目录加载模板（不读取 Git）
+ * language:
+ * - 未提供或为 'zh' 时，仅生成中文
+ * - 其他值时，要求先生成中文，再追加对应语言的等价内容
  */
 async function loadPrompt(
   name: 'daily' | 'weekly' | 'monthly',
   commitList: string,
-  diffBlock: string
+  diffBlock: string,
+  language?: string
 ): Promise<string> {
   const pkgRoot = join(__dirname, '..', '..');
   const path = join(pkgRoot, 'prompts', `${name}.md`);
@@ -68,9 +72,20 @@ async function loadPrompt(
   } catch {
     text = await readFile(join(process.cwd(), 'prompts', `${name}.md`), 'utf-8');
   }
-  return text
+  let finalText = text
     .replace(/\{\{COMMIT_LIST\}\}/g, commitList)
     .replace(/\{\{DIFF_BLOCK\}\}/g, diffBlock || '(无 diff 摘要)');
+  const lang = (language || 'zh').toLowerCase();
+  if (lang !== 'zh') {
+    const langTag = lang;
+    const multiNote =
+      '\n【多语言输出要求】\n' +
+      '1. 始终先按上述规则生成一份中文输出（编号列表）。\n' +
+      `2. 在中文输出之后，追加一段以 "${langTag} version:" 开头的行，然后给出等价的 ${langTag} 语言列表（编号结构可复用）。\n` +
+      '3. 不要省略中文部分。\n';
+    finalText += multiNote;
+  }
+  return finalText;
 }
 
 type ChatMessage = { role: 'user' | 'system' | 'assistant'; content: string };
@@ -128,8 +143,9 @@ export async function generateCommitMessage(diffBlock: string): Promise<string> 
 export async function summarize(
   promptName: 'daily' | 'weekly' | 'monthly',
   commitList: string,
-  diffBlock: string
+  diffBlock: string,
+  language?: string
 ): Promise<string> {
-  const content = await loadPrompt(promptName, commitList, diffBlock);
+  const content = await loadPrompt(promptName, commitList, diffBlock, language);
   return chatComplete(content, 0.4);
 }

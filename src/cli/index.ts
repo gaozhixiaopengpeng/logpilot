@@ -73,7 +73,8 @@ async function runReport(
   since: string,
   until: string,
   promptName: 'daily' | 'weekly' | 'monthly',
-  titleKind: 'today' | 'day' | 'week' | 'month'
+  titleKind: 'today' | 'day' | 'week' | 'month',
+  language?: string
 ): Promise<void> {
   const commits = await getCommits(repo, since, until);
   process.stdout.write(formatReportTitle(titleKind));
@@ -85,7 +86,7 @@ async function runReport(
   let report: string;
   try {
     const diffBlock = await getDiffsForCommits(repo, commits);
-    report = await summarize(promptName, commitList, diffBlock);
+    report = await summarize(promptName, commitList, diffBlock, language);
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     if (
@@ -119,13 +120,17 @@ program
   .description('生成今日工作日报')
   .option('-r, --repo <path>', '仓库路径', process.cwd())
   .option(
+    '--lang <code>',
+    '附加输出语言代码（默认仅中文，如：en 表示中文 + 英文）'
+  )
+  .option(
     '--provider <name>',
     'AI 提供方: openai（默认）| deepseek'
   )
-  .action(async (opts: { repo: string; provider?: string }) => {
+  .action(async (opts: { repo: string; provider?: string; lang?: string }) => {
     applyProvider(opts.provider);
     const { since, until } = todayRange();
-    await runReport(opts.repo, since, until, 'daily', 'today');
+    await runReport(opts.repo, since, until, 'daily', 'today', opts.lang);
   });
 
 program
@@ -133,33 +138,52 @@ program
   .description('生成指定日期日报')
   .requiredOption('-d, --date <yyyy-mm-dd>', '日期')
   .option('-r, --repo <path>', '仓库路径', process.cwd())
+  .option(
+    '--lang <code>',
+    '附加输出语言代码（默认仅中文，如：en 表示中文 + 英文）'
+  )
   .option('--provider <name>', 'AI 提供方: openai（默认）| deepseek')
-  .action(async (opts: { date: string; repo: string; provider?: string }) => {
-    applyProvider(opts.provider);
-    const { since, until } = dayRange(opts.date);
-    await runReport(opts.repo, since, until, 'daily', 'day');
-  });
+  .action(
+    async (opts: {
+      date: string;
+      repo: string;
+      provider?: string;
+      lang?: string;
+    }) => {
+      applyProvider(opts.provider);
+      const { since, until } = dayRange(opts.date);
+      await runReport(opts.repo, since, until, 'daily', 'day', opts.lang);
+    }
+  );
 
 program
   .command('week')
   .description('生成本周工作周报')
   .option('-r, --repo <path>', '仓库路径', process.cwd())
+  .option(
+    '--lang <code>',
+    '附加输出语言代码（默认仅中文，如：en 表示中文 + 英文）'
+  )
   .option('--provider <name>', 'AI 提供方: openai（默认）| deepseek')
-  .action(async (opts: { repo: string; provider?: string }) => {
+  .action(async (opts: { repo: string; provider?: string; lang?: string }) => {
     applyProvider(opts.provider);
     const { since, until } = weekRange();
-    await runReport(opts.repo, since, until, 'weekly', 'week');
+    await runReport(opts.repo, since, until, 'weekly', 'week', opts.lang);
   });
 
 program
   .command('month')
   .description('生成本月工作月报')
   .option('-r, --repo <path>', '仓库路径', process.cwd())
+  .option(
+    '--lang <code>',
+    '附加输出语言代码（默认仅中文，如：en 表示中文 + 英文）'
+  )
   .option('--provider <name>', 'AI 提供方: openai（默认）| deepseek')
-  .action(async (opts: { repo: string; provider?: string }) => {
+  .action(async (opts: { repo: string; provider?: string; lang?: string }) => {
     applyProvider(opts.provider);
     const { since, until } = monthRange();
-    await runReport(opts.repo, since, until, 'monthly', 'month');
+    await runReport(opts.repo, since, until, 'monthly', 'month', opts.lang);
   });
 
 function askLine(question: string): Promise<string> {
