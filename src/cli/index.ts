@@ -84,6 +84,9 @@ async function runReport(
   }
   const commitList = formatCommitList(commits);
   let report: string;
+  const stopLoading = startLoading(
+    '正在根据 commit 与 diff 调用 AI 生成工作报告，可能需要数秒'
+  );
   try {
     const diffBlock = await getDiffsForCommits(repo, commits);
     report = await summarize(promptName, commitList, diffBlock, language);
@@ -97,9 +100,11 @@ async function runReport(
       report = fallbackReport(commits.map((c) => c.message));
       process.stderr.write('提示: ' + msg + '\n');
     } else {
+      stopLoading();
       throw e;
     }
   }
+  stopLoading();
   process.stdout.write('\n' + report + '\n');
 }
 
@@ -276,7 +281,7 @@ program
           }
           let stagedMessage: string;
           const stopLoading = startLoading(
-            '正在根据暂存区 diff 调用 AI 生成 commit message，可能需要数秒'
+            '正在根据暂存区 diff 调用 AI 生成 commit message，请等待'
           );
           try {
             stagedMessage = await generateCommitMessage(stagedDiff);
