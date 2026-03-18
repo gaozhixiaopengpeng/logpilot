@@ -122,10 +122,9 @@ async function runReport(
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     if (
-      msg.includes('LOGPILOT_API_KEY') ||
-      msg.includes('WORKLOG_API_KEY') ||
-      msg.includes('OPENAI_API_KEY') ||
-      msg.includes('DEEPSEEK_API_KEY')
+      msg.includes('OPEN_AI_API_KEY') ||
+      msg.includes('DEEPSEEK_API_KEY') ||
+      msg.includes('AI_PROVIDER')
     ) {
       report = fallbackReport(commits.map((c) => c.message));
       process.stderr.write('提示: ' + msg + '\n');
@@ -148,7 +147,7 @@ program
 
 function applyProvider(provider?: string): void {
   if (provider) {
-    process.env.LOGPILOT_PROVIDER = provider;
+    process.env.AI_PROVIDER = provider;
   }
 }
 

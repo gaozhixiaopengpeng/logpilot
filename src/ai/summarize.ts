@@ -10,10 +10,30 @@ export type AiProvider = 'openai' | 'deepseek';
 
 const PROVIDER_DEFAULT: AiProvider = 'openai';
 
-function normalizeProvider(value: string | undefined): AiProvider {
-  const v = (value || PROVIDER_DEFAULT).toLowerCase();
-  if (v === 'deepseek') return 'deepseek';
-  return 'openai';
+function detectProvider(): AiProvider {
+  const explicit = (process.env.AI_PROVIDER || '').toLowerCase();
+  if (explicit === 'deepseek') return 'deepseek';
+  if (explicit === 'openai' || explicit === '') {
+    const hasOpenAiKey = !!process.env.OPEN_AI_API_KEY;
+    const hasDeepseekKey = !!process.env.DEEPSEEK_API_KEY;
+
+    if (explicit === 'openai') return 'openai';
+    if (!explicit) {
+      if (hasOpenAiKey && !hasDeepseekKey) return 'openai';
+      if (!hasOpenAiKey && hasDeepseekKey) return 'deepseek';
+      if (!hasOpenAiKey && !hasDeepseekKey) {
+        throw new Error(
+          '请至少设置环境变量 OPEN_AI_API_KEY 或 DEEPSEEK_API_KEY，或显式设置 AI_PROVIDER=openai/deepseek'
+        );
+      }
+      // 两个 key 都配置但 AI_PROVIDER 为空，需要用户明确指定
+      throw new Error(
+        '检测到同时配置 OPEN_AI_API_KEY 和 DEEPSEEK_API_KEY，但未设置 AI_PROVIDER，请在 .env 中显式设置 AI_PROVIDER=openai 或 AI_PROVIDER=deepseek'
+      );
+    }
+  }
+  // 兜底：未知值时仍按默认 openai 处理
+  return PROVIDER_DEFAULT;
 }
 
 function resolveEndpoint(provider: AiProvider): {
@@ -23,40 +43,31 @@ function resolveEndpoint(provider: AiProvider): {
 } {
   if (provider === 'deepseek') {
     const baseURL =
-      process.env.LOGPILOT_API_BASE ||
-      process.env.WORKLOG_API_BASE ||
-      process.env.OPENAI_API_BASE_URL ||
+      process.env.OPEN_AI_BASE ||
       'https://api.deepseek.com/v1';
     const apiKey =
-      process.env.DEEPSEEK_API_KEY ||
-      process.env.LOGPILOT_API_KEY ||
-      process.env.WORKLOG_API_KEY ||
-      process.env.OPENAI_API_KEY;
+      process.env.DEEPSEEK_API_KEY || process.env.OPEN_AI_API_KEY;
     const model =
-      process.env.LOGPILOT_MODEL || process.env.WORKLOG_MODEL || 'deepseek-chat';
+      process.env.DEEPSEEK_MODEL || process.env.OPEN_AI_MODEL || 'deepseek-chat';
     return { baseURL, apiKey, model };
   }
   const baseURL =
-    process.env.LOGPILOT_API_BASE ||
-    process.env.WORKLOG_API_BASE ||
-    process.env.OPENAI_API_BASE_URL ||
+    process.env.OPEN_AI_BASE ||
     'https://api.openai.com/v1';
   const apiKey =
-    process.env.LOGPILOT_API_KEY ||
-    process.env.WORKLOG_API_KEY ||
-    process.env.OPENAI_API_KEY;
+    process.env.OPEN_AI_API_KEY;
   const model =
-    process.env.LOGPILOT_MODEL || process.env.WORKLOG_MODEL || 'gpt-4o-mini';
+    process.env.OPEN_AI_MODEL || 'gpt-4o-mini';
   return { baseURL, apiKey, model };
 }
 
 function missingKeyMessage(provider: AiProvider): string {
   if (provider === 'deepseek') {
     return (
-      '请设置环境变量 DEEPSEEK_API_KEY（或 LOGPILOT_API_KEY / WORKLOG_API_KEY / OPENAI_API_KEY）后重试'
+      '请设置环境变量 DEEPSEEK_API_KEY（或 OPEN_AI_API_KEY 作为兼容 Key）后重试'
     );
   }
-  return '请设置环境变量 LOGPILOT_API_KEY / WORKLOG_API_KEY 或 OPENAI_API_KEY 后重试';
+  return '请设置环境变量 OPEN_AI_API_KEY 后重试';
 }
 
 async function loadPrompt(
@@ -104,9 +115,7 @@ async function loadCommitPrompt(diffBlock: string): Promise<string> {
 }
 
 async function chatComplete(content: string, temperature = 0.4): Promise<string> {
-  const provider = normalizeProvider(
-    process.env.LOGPILOT_PROVIDER || process.env.WORKLOG_PROVIDER
-  );
+  const provider = detectProvider();
   const { baseURL, apiKey, model } = resolveEndpoint(provider);
   if (!apiKey) {
     throw new Error(missingKeyMessage(provider));
@@ -141,7 +150,7 @@ export async function generateCommitMessage(diffBlock: string): Promise<string> 
 
 /**
  * 调用 LLM 生成工作总结（不读取 Git）
- * 提供方由 LOGPILOT_PROVIDER（兼容 WORKLOG_PROVIDER）决定，默认 openai；可选 deepseek。
+ * 提供方由 AI_PROVIDER（兼容 AI_PROVIDER）决定，默认 openai；可选 deepseek。
  */
 export async function summarize(
   promptName: 'daily' | 'weekly' | 'monthly',
