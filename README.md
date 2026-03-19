@@ -37,16 +37,20 @@
 npm install -g workpilot
 ```
 
-### 2) 配置 API Key（二选一）
+### 2) 配置 API Key（同时支持 openai / deepseek）
 
 ```bash
-# OpenAI 兼容
+# OpenAI（或 OpenAI 兼容网关 Key）
 export OPEN_AI_API_KEY=sk-xxx
-export AI_PROVIDER=openai
+export OPEN_AI_MODEL=gpt-4o-mini
 
-# 或 DeepSeek
+# DeepSeek
 export DEEPSEEK_API_KEY=sk-xxx
-export AI_PROVIDER=deepseek
+export DEEPSEEK_MODEL=deepseek-chat
+
+# 默认走哪个（可选）
+# 也可以不设置 AI_PROVIDER：当仅配置一个 Key 时会自动推断
+export AI_PROVIDER=openai
 ```
 
 > 说明：`workpilot` 运行时会直接读取当前终端会话里的环境变量（`process.env`），不依赖你运行命令时所在的目录。
@@ -120,6 +124,9 @@ workpilot commit
 | `OPEN_AI_MODEL` | OpenAI 兼容模型名（可选） |
 | `DEEPSEEK_API_KEY` | DeepSeek Key |
 | `DEEPSEEK_MODEL` | DeepSeek 模型名（可选） |
+
+补充说明：
+- `OPEN_AI_BASE` 是 OpenAI 兼容网关地址；当你选择 `deepseek` provider 时，代码也会优先复用 `OPEN_AI_BASE` 作为 `baseURL`。如果你只想使用官方 DeepSeek 地址，建议不要设置 `OPEN_AI_BASE`。
 
 自动推断规则：
 - 两个 Key 都未配置 -> 提示先配置 `OPEN_AI_API_KEY` 或 `DEEPSEEK_API_KEY`
