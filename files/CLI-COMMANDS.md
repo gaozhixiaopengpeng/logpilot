@@ -1,8 +1,8 @@
-## Logpilot CLI 命令说明（新手版）
+## workpilot CLI 命令说明（新手版）
 
-本文档面向 **第一次使用 Logpilot** 的用户，帮助你快速上手常用命令。
+本文档面向 **第一次使用 workpilot** 的用户，帮助你快速上手常用命令。
 
-Logpilot 是一个命令行工具，用来基于 **Git commit 与代码 diff** 自动生成：
+workpilot 是一个命令行工具，用来基于 **Git commit 与代码 diff** 自动生成：
 
 - **工作日报**
 - **周报 / 月报**
@@ -252,7 +252,7 @@ workpilot week --repo ../another-project
 ## 7. 常见问题（FAQ）
 
 - **Q1：为什么运行命令时提示没有 commit？**  
-  **A：** Logpilot 只会基于已有的 Git 提交记录生成报告。请确认：
+**A：** workpilot 只会基于已有的 Git 提交记录生成报告。请确认：
   - 当前（或指定的）仓库已经初始化为 Git 仓库；
   - 在目标时间范围内（例如今天）确实有 commit；
   - 你传入的 `--date` 参数格式正确（`YYYY-MM-DD`）。
@@ -288,5 +288,5 @@ workpilot week --repo ../another-project
 - 每周 / 每月总结：
   - 使用 `workpilot week` / `workpilot month`，快速整理阶段性成果。
 
-掌握以上命令后，你已经可以在日常开发中高效地使用 Logpilot 生成 commit message 和各类工作报告了。
+掌握以上命令后，你已经可以在日常开发中高效地使用 workpilot 生成 commit message 和各类工作报告了。
 

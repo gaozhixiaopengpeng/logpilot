@@ -1,8 +1,8 @@
-# Logpilot
+# workpilot
 
 AI 自动生成 Git 工作日报的命令行工具，让「写日报 / 周报 / 月报」变成一条命令的事。
 
-Logpilot 会自动读取你的 Git commit 和代码 diff，然后通过 AI 帮你生成：
+workpilot 会自动读取你的 Git commit 和代码 diff，然后通过 AI 帮你生成：
 
 * 日报
 * 周报
@@ -71,7 +71,7 @@ node dist/cli/index.js day
 
 ## AI 配置（环境变量）
 
-Logpilot 使用 **OpenAI 兼容 API**，默认提供方为 **OpenAI 兼容**，也可切换为 **DeepSeek**。请通过「环境变量」进行配置（适用于本机、CI、容器等环境）。
+workpilot 使用 **OpenAI 兼容 API**，默认提供方为 **OpenAI 兼容**，也可切换为 **DeepSeek**。请通过「环境变量」进行配置（适用于本机、CI、容器等环境）。
 
 **环境变量：**
 
@@ -174,9 +174,9 @@ workpilot month
 ```bash
 git add -A   # 先暂存变更
 workpilot commit
-# 使用暂存区 diff：logpilot commit --staged
-# 只生成不提交：logpilot commit --no-commit
-# 仅基于未暂存 diff 生成（不会执行提交）：logpilot commit --work
+# 使用暂存区 diff：workpilot commit --staged
+# 只生成不提交：workpilot commit --no-commit
+# 仅基于未暂存 diff 生成（不会执行提交）：workpilot commit --work
 ```
 
 **指定仓库路径（在非仓库目录运行）：**
@@ -197,7 +197,7 @@ workpilot day --repo https://github.com/user/project
 
 ## 多语言输出（适合外企工程师）
 
-Logpilot 支持 **多语言日报输出**，但**始终保证提供一份完整的中文版本（标题 + 内容）**，特别适合在外企工作的工程师：
+workpilot 支持 **多语言日报输出**，但**始终保证提供一份完整的中文版本（标题 + 内容）**，特别适合在外企工作的工程师：
 
 * 默认输出：中文日报（标题 + 内容）
 * 可选输出：通过 CLI 选项附加其他语言版本（如英文）
@@ -230,7 +230,7 @@ workpilot day --lang en
 
 ## 工作原理
 
-Logpilot 支持 **两条衔接的流程**：先辅助写出 commit，再基于已提交历史生成日报。
+workpilot 支持 **两条衔接的流程**：先辅助写出 commit，再基于已提交历史生成日报。
 
 **1. 生成 commit message（提交前）**
 
