@@ -3,6 +3,7 @@ import { getDiffsForCommits } from '../git/diff.js';
 import { formatCommitList } from '../utils/format.js';
 import { summarize } from '../ai/summarize.js';
 import { formatReportTitle, fallbackReport } from './generate.js';
+import { getUiMessages } from '../i18n/ui-messages.js';
 import { saveLastReportOutput } from '../utils/last-output.js';
 import { startLoading } from '../utils/loading.js';
 
@@ -18,10 +19,11 @@ export async function runReport(
   titleKind: ReportTitleKind,
   language?: string
 ): Promise<string> {
+  const ui = getUiMessages();
   const commits = await getCommits(repo, since, until);
   if (commits.length === 0) {
     const title = formatReportTitle(titleKind, language);
-    const rest = '（所选时间范围内无 commit）\n';
+    const rest = ui.reportNoCommitsInRange;
     const full = title + rest;
     process.stdout.write(title);
     process.stdout.write(rest);
@@ -30,9 +32,7 @@ export async function runReport(
   }
   const commitList = formatCommitList(commits);
   let report: string;
-  const stopLoading = startLoading(
-    '正在根据 commit 与 diff 调用 AI 生成工作报告，可能需要数秒'
-  );
+  const stopLoading = startLoading(ui.loadingReportGenerating);
   try {
     const diffBlock = await getDiffsForCommits(repo, commits);
     report = await summarize(promptName, commitList, diffBlock, language);
@@ -44,7 +44,7 @@ export async function runReport(
       msg.includes('AI_PROVIDER')
     ) {
       report = fallbackReport(commits.map((c) => c.message));
-      process.stderr.write('提示: ' + msg + '\n');
+      process.stderr.write(ui.hintPrefix + msg + '\n');
     } else {
       stopLoading();
       throw e;

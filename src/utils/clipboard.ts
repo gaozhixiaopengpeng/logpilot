@@ -2,6 +2,7 @@ import { spawn } from 'node:child_process';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { getUiMessages, tmpl } from '../i18n/ui-messages.js';
 
 function spawnWithStdin(
   command: string,
@@ -19,7 +20,18 @@ function spawnWithStdin(
     });
     child.on('close', (code) => {
       if (code === 0) resolve();
-      else reject(new Error(stderr.trim() || `${command} 退出码 ${code}`));
+      else {
+        const ui = getUiMessages();
+        reject(
+          new Error(
+            stderr.trim() ||
+              tmpl(ui.errCommandExitCode, {
+                command,
+                code: String(code ?? ''),
+              })
+          )
+        );
+      }
     });
     child.stdin.write(stdin, 'utf8', () => {
       child.stdin.end();
@@ -48,7 +60,18 @@ async function copyWindows(text: string): Promise<void> {
       child.on('error', reject);
       child.on('close', (code) => {
         if (code === 0) resolve();
-        else reject(new Error(errOut.trim() || `Set-Clipboard 退出码 ${code}`));
+        else {
+          const ui = getUiMessages();
+          reject(
+            new Error(
+              errOut.trim() ||
+                tmpl(ui.errCommandExitCode, {
+                  command: 'Set-Clipboard',
+                  code: String(code ?? ''),
+                })
+            )
+          );
+        }
       });
     });
   } finally {
@@ -73,10 +96,7 @@ async function copyLinux(text: string): Promise<void> {
       if (code === 'ENOENT') continue;
     }
   }
-  throw (
-    lastError ??
-    new Error('未找到剪贴板工具，请安装 wl-copy、xclip 或 xsel 之一')
-  );
+  throw lastError ?? new Error(getUiMessages().errNoClipboardTool);
 }
 
 /** 将文本写入系统剪贴板（macOS / Windows / 常见 Linux 桌面） */
@@ -89,6 +109,8 @@ export async function copyToClipboard(text: string): Promise<void> {
   } else if (platform === 'linux') {
     await copyLinux(text);
   } else {
-    throw new Error(`当前系统 ${platform} 暂不支持剪贴板写入`);
+    throw new Error(
+      tmpl(getUiMessages().errClipboardUnsupportedPlatform, { platform })
+    );
   }
 }

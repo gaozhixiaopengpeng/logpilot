@@ -1,4 +1,5 @@
 import { generateCommitMessage } from '../ai/summarize.js';
+import { getUiMessages } from '../i18n/ui-messages.js';
 import { publishCommitMessageForCopy } from './commit-output.js';
 import { startLoading } from '../utils/loading.js';
 
@@ -22,7 +23,7 @@ export async function generateCommitMessageWithCopy(
     return { ok: true, message };
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    process.stderr.write('\n生成失败: ' + msg + '\n');
+    process.stderr.write(getUiMessages().errGenerateFailedPrefix + msg + '\n');
     process.exitCode = 1;
     stopLoading();
     return { ok: false };

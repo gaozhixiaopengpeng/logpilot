@@ -1,9 +1,10 @@
 import type { Command } from 'commander';
 import {
   ARG_POST_ACTION_COPY,
-  DESC_POST_ACTION_COPY_REPORT,
+  descPostActionCopyReport,
   runWithCopyPostAction,
 } from './copy-support.js';
+import { getUiMessages } from '../i18n/ui-messages.js';
 import {
   runReport,
   type ReportPromptName,
@@ -22,18 +23,16 @@ type ReportOpts = { repo: string; provider?: string; lang?: string };
 function withReportArguments(cmd: Command, description: string): Command {
   return cmd.description(description).argument(
     ARG_POST_ACTION_COPY,
-    DESC_POST_ACTION_COPY_REPORT
+    descPostActionCopyReport()
   );
 }
 
 function withReportOptions(cmd: Command): Command {
+  const ui = getUiMessages();
   return cmd
-    .option('-r, --repo <path>', '仓库路径', process.cwd())
-    .option(
-      '--lang <code>',
-      '输出语言代码（默认 zh 中文，如：en 表示仅英文）'
-    )
-    .option('--provider <name>', 'AI 提供方: openai（默认）| deepseek');
+    .option('-r, --repo <path>', ui.optRepoPath, process.cwd())
+    .option('--lang <code>', ui.optLangHelp)
+    .option('--provider <name>', ui.optProvider);
 }
 
 export function registerReportCommands(
@@ -41,11 +40,12 @@ export function registerReportCommands(
   cliName: string,
   applyProvider: (provider?: string) => void
 ): void {
+  const ui = getUiMessages();
   withReportOptions(
     withReportArguments(
       program.command('day'),
-      '生成今日或指定日期日报'
-    ).option('-d, --date <yyyy-mm-dd>', '日期（留空则为今天）')
+      ui.cmdDayDescription
+    ).option('-d, --date <yyyy-mm-dd>', ui.optDate)
   ).action(
     async (
       postAction: string | undefined,
@@ -76,14 +76,14 @@ export function registerReportCommands(
   }> = [
     {
       name: 'week',
-      description: '生成本周工作周报',
+      description: ui.cmdWeekDescription,
       range: weekRange,
       prompt: 'weekly',
       title: 'week',
     },
     {
       name: 'month',
-      description: '生成本月工作月报',
+      description: ui.cmdMonthDescription,
       range: monthRange,
       prompt: 'monthly',
       title: 'month',

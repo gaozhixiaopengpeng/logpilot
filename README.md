@@ -1,7 +1,9 @@
 # workpilot
 
-用代码讲述你的工作。  
-`workpilot` 是一个 AI CLI：自动读取 Git 提交与代码变化，快速生成可直接上报的日报 / 周报 / 月报，并支持基于 diff 生成 commit message。
+Tell the story of your work through code.  
+`workpilot` is an AI CLI that reads Git commits and code changes to produce ready-to-share daily / weekly / monthly reports, and commit messages from diffs.
+
+**Languages:** This file is English by default. [简体中文](README.zh-CN.md)
 
 [![npm version](https://img.shields.io/npm/v/workpilot.svg)](https://www.npmjs.com/package/workpilot)
 [![npm downloads](https://img.shields.io/npm/dw/workpilot.svg)](https://www.npmjs.com/package/workpilot)
@@ -10,43 +12,43 @@
 
 ---
 
-## 为什么用 workpilot
+## Why workpilot
 
-- 少写重复汇报：把零散 commit 自动整理成结构化日报
-- 降低沟通成本：技术变更转成非技术同事也能读懂的总结
-- 保持提交质量：基于 diff 生成更规范的 commit message
-- 纯 CLI 工作流：无 UI、无平台绑定，适配本地与内网仓库
-
----
-
-## 成本优势（低成本可持续）
-
-> 约 **5 毛每百次**（按常见轻量模型与短文本场景估算，实际受模型、token 长度和网关计费影响）。
-
-- 一次日报通常仅消耗少量 token
-- 团队可按网关策略统一控费
-- 建议先小范围试运行，再按月统计优化模型与提示词
+- Less repetitive reporting: turn scattered commits into structured summaries
+- Clearer communication: technical changes explained for non-technical readers
+- Better commits: diff-based, convention-friendly messages
+- Pure CLI: no UI or vendor lock-in; works with local and air-gapped repos
 
 ---
 
-## 30 秒上手
+## Cost profile (low and predictable)
 
-### 1) 安装
+> On the order of **a few cents per hundred runs** for typical small prompts and light models; actual cost depends on model, tokens, and your gateway.
+
+- Each daily report usually uses a small number of tokens
+- Teams can centralize spend via gateway policy
+- Start with a small pilot, then tune model and prompts monthly
+
+---
+
+## Quick start (about 30 seconds)
+
+### 1) Install
 
 ```bash
 npm install -g workpilot
 ```
 
-### 命令名与别名：`workpilot` / `wp`
+### Command names: `workpilot` / `wp`
 
-- **两个命令，同一程序**：`package.json` 的 `bin` 同时提供 **`workpilot`** 与 **`wp`**，均指向同一入口脚本；子命令、选项、行为一致。
-- **文档里的写法**：下文示例统一使用 `workpilot`；你可把任意一条命令中的 `workpilot` 换成 **`wp`**（例如 `wp day`、`wp week`、`wp commit`）。
-- **帮助信息**：执行 `workpilot --help` 或 `wp --help` 时，用法行中的程序名会与当前输入的命令一致（`Usage: workpilot ...` 或 `Usage: wp ...`）。
+- **Same binary, two names**: `package.json` `bin` exposes **`workpilot`** and **`wp`**; behavior is identical.
+- **Docs**: examples below use `workpilot`; you can substitute **`wp`** anywhere (e.g. `wp day`, `wp commit`).
+- **Help**: `workpilot --help` / `wp --help` shows the name you invoked in the usage line.
 
-### 2) 配置 API Key（同时支持 openai / deepseek）
+### 2) API keys (OpenAI and/or DeepSeek)
 
 ```bash
-# OpenAI（或 OpenAI 兼容网关 Key）
+# OpenAI (or OpenAI-compatible gateway)
 export OPEN_AI_API_KEY=sk-xxx
 export OPEN_AI_MODEL=gpt-4o-mini
 
@@ -54,21 +56,21 @@ export OPEN_AI_MODEL=gpt-4o-mini
 export DEEPSEEK_API_KEY=sk-xxx
 export DEEPSEEK_MODEL=deepseek-chat
 
-# 默认走哪个（可选）
-# 也可以不设置 AI_PROVIDER：当仅配置一个 Key 时会自动推断
+# Optional default provider
+# If unset, a single configured key is auto-detected
 export AI_PROVIDER=openai
 ```
 
-> 说明：`workpilot` / `wp` 运行时会直接读取当前终端会话里的环境变量（`process.env`），不依赖你运行命令时所在的目录。
+> The CLI reads **`process.env` from your current shell**, not from the project directory.
 >
-> 若你希望“新开终端也自动生效”，请把上面的 `export` 追加到你的 shell 配置文件里（不要放到项目目录里）：
+> To persist across new terminals, add the `export` lines to your shell config (not inside a repo):
 >
-> - bash：`~/.bash_profile` 或 `~/.bashrc`
-> - zsh：`~/.zshrc`
+> - bash: `~/.bash_profile` or `~/.bashrc`
+> - zsh: `~/.zshrc`
 >
-> 修改后要么重新打开终端，要么执行 `source ~/.bash_profile` / `source ~/.bashrc` / `source ~/.zshrc`（按你实际改的文件）。
+> Then open a new terminal or `source` the file you edited.
 
-### 3) 生成今日日报
+### 3) Today’s daily report
 
 ```bash
 workpilot day
@@ -76,100 +78,92 @@ workpilot day
 
 ---
 
-## 常用命令
+## Common commands
 
-以下命令中的 **`workpilot`** 均可改为 **`wp`**。
+You may replace **`workpilot`** with **`wp`** in any command.
 
 ```bash
-# 今日日报
 workpilot day
-
-# 生成日报并写入剪贴板（一步完成）
 workpilot day copy
-
-# 先看完终端输出后再复制：接着执行（复制最近一次报表或 commit message 等缓存正文）
 workpilot copy
-
-# 指定日期日报
 workpilot day --date 2026-03-10
-
-# 本周周报
 workpilot week
-
-# 本月月报
 workpilot month
-
-# 基于 diff 生成 commit message（可确认后提交）
 git add -A
 workpilot commit
-
-# 生成 commit message 并写入剪贴板
 workpilot commit copy
-
-# 管道：将日报标准输出写入剪贴板
 workpilot day | workpilot copy
 ```
 
-**`day` / `week` / `month` / `commit`** 均可在末尾加 **`copy`**（如 `workpilot week copy`、`workpilot commit --no-commit copy`），在终端输出后把**同一份可复制正文**写入剪贴板。单独执行 **`workpilot copy`** 时读取本机缓存（`$XDG_CACHE_HOME/workpilot/last-report.txt`，未设置时一般为 `~/.cache/workpilot/last-report.txt`）。
+**`day` / `week` / `month` / `commit`** accept a trailing **`copy`** (e.g. `workpilot week copy`, `workpilot commit --no-commit copy`) to write the **same body** to the system clipboard after printing. **`workpilot copy`** alone reads the local cache (`$XDG_CACHE_HOME/workpilot/last-report.txt`, or `~/.cache/workpilot/last-report.txt` when unset).
 
 ---
 
-## 示例输出
+## Example output
 
 ```text
-今日工作总结
+Today's Work Summary:
 
-1. 完成用户登录接口开发并补齐异常处理
-2. 修复支付流程中的边界错误，补充回归验证
-3. 优化列表页渲染性能，首屏耗时下降
-4. 新增订单状态流转逻辑并完成联调
+1. Shipped user login API and tightened error handling
+2. Fixed edge cases in checkout flow and added regression checks
+3. Improved list rendering; faster first paint
+4. Added order state machine and integration tests
 ```
 
 ---
 
-## 适用场景
+## When it helps
 
-- 每天下班前快速产出日报
-- 每周复盘输出周报，沉淀阶段性成果
-- 外企或跨团队协作，生成中文为主并可附加英文版本
-- 个人开发者持续记录 side project 进展
-
----
-
-## 环境变量说明
-
-| 变量 | 说明 |
-|------|------|
-| `AI_PROVIDER` | `openai` 或 `deepseek` |
-| `OPEN_AI_API_KEY` | OpenAI 或 OpenAI 兼容网关 Key |
-| `OPEN_AI_BASE` | OpenAI 兼容网关 Base URL（可选） |
-| `OPEN_AI_MODEL` | OpenAI 兼容模型名（可选） |
-| `DEEPSEEK_API_KEY` | DeepSeek Key |
-| `DEEPSEEK_MODEL` | DeepSeek 模型名（可选） |
-
-补充说明：
-- `OPEN_AI_BASE` 是 OpenAI 兼容网关地址；当你选择 `deepseek` provider 时，代码也会优先复用 `OPEN_AI_BASE` 作为 `baseURL`。如果你只想使用官方 DeepSeek 地址，建议不要设置 `OPEN_AI_BASE`。
-
-自动推断规则：
-- 两个 Key 都未配置 -> 提示先配置 `OPEN_AI_API_KEY` 或 `DEEPSEEK_API_KEY`
-- 仅配置 `OPEN_AI_API_KEY` -> 使用 `openai`
-- 仅配置 `DEEPSEEK_API_KEY` -> 使用 `deepseek`
-- 两个 Key 同时配置但未设置 `AI_PROVIDER` -> 提示配置 `AI_PROVIDER=openai` 或 `AI_PROVIDER=deepseek`
+- End-of-day status in minutes
+- Weekly reviews and milestones
+- Mixed-language teams (Chinese-first reports with optional `--lang` for model output)
+- Side projects and steady progress logs
 
 ---
 
-## 仓库与兼容性
+## Environment variables
+
+| Variable | Purpose |
+|----------|---------|
+| `AI_PROVIDER` | `openai` or `deepseek` |
+| `OPEN_AI_API_KEY` | OpenAI or compatible gateway key |
+| `OPEN_AI_BASE` | Optional compatible base URL |
+| `OPEN_AI_MODEL` | Optional model name |
+| `DEEPSEEK_API_KEY` | DeepSeek key |
+| `DEEPSEEK_MODEL` | Optional DeepSeek model |
+
+Notes:
+
+- `OPEN_AI_BASE` is the OpenAI-compatible base URL; when using the DeepSeek provider, the code may reuse `OPEN_AI_BASE` as `baseURL`. For the official DeepSeek endpoint only, avoid setting `OPEN_AI_BASE`.
+
+Inference:
+
+- No keys → ask to set `OPEN_AI_API_KEY` or `DEEPSEEK_API_KEY`
+- Only `OPEN_AI_API_KEY` → `openai`
+- Only `DEEPSEEK_API_KEY` → `deepseek`
+- Both keys without `AI_PROVIDER` → ask to set `AI_PROVIDER=openai` or `deepseek`
+
+---
+
+## CLI language (UI) vs report language (`--lang`)
+
+- **Terminal UI** (help text, errors, hints, loading lines): **English or Chinese** from your OS locale (`LANG` / `LC_*` / `Intl`). Chinese locales → Chinese UI; otherwise English.
+- **`day` / `week` / `month --lang`**: still controls **model output language** for the report only (unchanged). It does **not** switch the CLI chrome.
+
+---
+
+## Requirements
 
 - Node.js >= 18
-- 支持本地 Git 仓库
-- 支持 GitHub / GitLab（含企业内网 GitLab）
+- Local Git repository
+- GitHub / GitLab (including self-hosted GitLab)
 
 ---
 
-## 反馈与问题
+## Feedback
 
-- 提交 Issue：<https://github.com/gaozhixiaopengpeng/work-pilot/issues>
-- 项目主页：<https://github.com/gaozhixiaopengpeng/work-pilot>
+- Issues: <https://github.com/gaozhixiaopengpeng/work-pilot/issues>
+- Repo: <https://github.com/gaozhixiaopengpeng/work-pilot>
 
 ---
 

@@ -1,3 +1,5 @@
+import { getUiMessages } from '../i18n/ui-messages.js';
+
 /**
  * 格式化最终输出（stdout 用）
  * language:
@@ -25,10 +27,11 @@ export function formatReportTitle(
 }
 
 /**
- * 无 AI 时的占位输出
+ * 无 AI 时的占位输出（文案随终端 UI 语言，与 `--lang` 无关）
  */
 export function fallbackReport(commitMessages: string[]): string {
-  if (commitMessages.length === 0) return '(所选时间范围内无 commit，无法生成总结)\n';
+  const ui = getUiMessages();
+  if (commitMessages.length === 0) return ui.fallbackNoCommits;
   const lines = commitMessages.map((m, i) => `${i + 1}. ${m}`);
-  return '今日工作 (仅 commit 摘要，未调用 AI): \n\n' + lines.join('\n') + '\n';
+  return ui.fallbackReportHeader + lines.join('\n') + '\n';
 }

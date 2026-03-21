@@ -2,6 +2,7 @@ import axios from 'axios';
 import { readFile } from 'fs/promises';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
+import { getUiMessages } from '../i18n/ui-messages.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -22,14 +23,10 @@ function detectProvider(): AiProvider {
       if (hasOpenAiKey && !hasDeepseekKey) return 'openai';
       if (!hasOpenAiKey && hasDeepseekKey) return 'deepseek';
       if (!hasOpenAiKey && !hasDeepseekKey) {
-        throw new Error(
-          '请至少设置环境变量 OPEN_AI_API_KEY 或 DEEPSEEK_API_KEY 后重试'
-        );
+        throw new Error(getUiMessages().errNeedApiKey);
       }
       // 两个 key 都配置但 AI_PROVIDER 为空，需要用户明确指定
-      throw new Error(
-        '检测到同时配置 OPEN_AI_API_KEY 和 DEEPSEEK_API_KEY，但未设置 AI_PROVIDER，请通过环境变量显式设置 AI_PROVIDER=openai 或 AI_PROVIDER=deepseek'
-      );
+      throw new Error(getUiMessages().errBothKeysNeedProvider);
     }
   }
   // 兜底：未知值时仍按默认 openai 处理
@@ -62,12 +59,11 @@ function resolveEndpoint(provider: AiProvider): {
 }
 
 function missingKeyMessage(provider: AiProvider): string {
+  const ui = getUiMessages();
   if (provider === 'deepseek') {
-    return (
-      '请设置环境变量 DEEPSEEK_API_KEY（或 OPEN_AI_API_KEY 作为兼容 Key）后重试'
-    );
+    return ui.errSetDeepseekKey;
   }
-  return '请设置环境变量 OPEN_AI_API_KEY 后重试';
+  return ui.errSetOpenAiKey;
 }
 
 async function loadPrompt(
@@ -135,7 +131,7 @@ async function chatComplete(content: string, temperature = 0.4): Promise<string>
   );
   const choice = data?.choices?.[0]?.message?.content;
   if (!choice || typeof choice !== 'string') {
-    throw new Error('AI 返回为空，请检查 API 与模型');
+    throw new Error(getUiMessages().errAiEmptyResponse);
   }
   return choice.trim();
 }

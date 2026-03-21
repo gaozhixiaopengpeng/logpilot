@@ -1,17 +1,22 @@
+import { getUiMessages, tmpl } from '../i18n/ui-messages.js';
+
 /** Git log 用的 ISO 时间区间（since 含、until 不含，与现有行为一致） */
 export type IsoTimeRange = { since: string; until: string };
 
 const DAY_MS = 86400000;
 
 export function dayRange(dateStr: string): IsoTimeRange {
+  const ui = getUiMessages();
+  const invalid = () =>
+    new Error(tmpl(ui.errInvalidDate, { dateStr }));
   const parts = dateStr.split('-').map((p) => Number(p));
   if (parts.length !== 3 || parts.some((n) => Number.isNaN(n))) {
-    throw new Error(`无效日期: ${dateStr}，请使用 YYYY-MM-DD`);
+    throw invalid();
   }
   const [year, month, day] = parts;
   const start = new Date(year, month - 1, day, 0, 0, 0, 0);
   if (Number.isNaN(start.getTime())) {
-    throw new Error(`无效日期: ${dateStr}，请使用 YYYY-MM-DD`);
+    throw invalid();
   }
   const since = start.toISOString();
   const until = new Date(start.getTime() + DAY_MS).toISOString();
