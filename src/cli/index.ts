@@ -15,6 +15,7 @@ import {
   formatReportTitle,
   fallbackReport,
 } from '../report/generate.js';
+import { copyToClipboard } from '../utils/clipboard.js';
 
 function dayRange(dateStr: string): { since: string; until: string } {
   const parts = dateStr.split('-').map((p) => Number(p));
@@ -229,6 +230,14 @@ function askLine(question: string): Promise<string> {
   });
 }
 
+async function readStdinUtf8(): Promise<string> {
+  const chunks: Buffer[] = [];
+  for await (const chunk of process.stdin) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+  }
+  return Buffer.concat(chunks).toString('utf8');
+}
+
 function startLoading(message: string): () => void {
   let stopped = false;
   // 进度提示统一写到 stderr，避免污染 stdout 的正式输出
@@ -427,5 +436,37 @@ program
       }
     }
   );
+
+program
+  .command('copy')
+  .description(
+    '将标准输入或指定文本复制到系统剪贴板（可配合管道：workpilot day | workpilot copy）'
+  )
+  .option('-t, --text <string>', '直接复制该字符串（无需管道）')
+  .action(async (opts: { text?: string }) => {
+    let content: string;
+    if (opts.text !== undefined) {
+      content = opts.text;
+    } else if (process.stdin.isTTY) {
+      process.stderr.write(
+        `用法: 将内容通过管道传入，或使用 --text。\n` +
+          `示例: ${cliName} day | ${cliName} copy\n` +
+          `      ${cliName} copy --text "一段说明"\n`
+      );
+      process.exitCode = 1;
+      return;
+    } else {
+      content = await readStdinUtf8();
+    }
+    try {
+      await copyToClipboard(content);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      process.stderr.write('复制到剪贴板失败: ' + msg + '\n');
+      process.exitCode = 1;
+      return;
+    }
+    process.stderr.write('已复制到剪贴板。\n');
+  });
 
 program.parse();

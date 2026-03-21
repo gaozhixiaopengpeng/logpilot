@@ -37,7 +37,11 @@
 npm install -g workpilot
 ```
 
-安装后可在终端使用 **`workpilot`** 或其短命令 **`wp`**（二者等价，下文示例以 `workpilot` 为例）。
+### 命令名与别名：`workpilot` / `wp`
+
+- **两个命令，同一程序**：`package.json` 的 `bin` 同时提供 **`workpilot`** 与 **`wp`**，均指向同一入口脚本；子命令、选项、行为一致。
+- **文档里的写法**：下文示例统一使用 `workpilot`；你可把任意一条命令中的 `workpilot` 换成 **`wp`**（例如 `wp day`、`wp week`、`wp commit`）。
+- **帮助信息**：执行 `workpilot --help` 或 `wp --help` 时，用法行中的程序名会与当前输入的命令一致（`Usage: workpilot ...` 或 `Usage: wp ...`）。
 
 ### 2) 配置 API Key（同时支持 openai / deepseek）
 
@@ -55,7 +59,7 @@ export DEEPSEEK_MODEL=deepseek-chat
 export AI_PROVIDER=openai
 ```
 
-> 说明：`workpilot` 运行时会直接读取当前终端会话里的环境变量（`process.env`），不依赖你运行命令时所在的目录。
+> 说明：`workpilot` / `wp` 运行时会直接读取当前终端会话里的环境变量（`process.env`），不依赖你运行命令时所在的目录。
 >
 > 若你希望“新开终端也自动生效”，请把上面的 `export` 追加到你的 shell 配置文件里（不要放到项目目录里）：
 >
@@ -74,6 +78,8 @@ workpilot day
 
 ## 常用命令
 
+以下命令中的 **`workpilot`** 均可改为 **`wp`**。
+
 ```bash
 # 今日日报
 workpilot day
@@ -90,6 +96,9 @@ workpilot month
 # 基于 diff 生成 commit message（可确认后提交）
 git add -A
 workpilot commit
+
+# 将日报输出直接写入系统剪贴板（macOS / Windows / 常见 Linux 桌面）
+workpilot day | workpilot copy
 ```
 
 ---

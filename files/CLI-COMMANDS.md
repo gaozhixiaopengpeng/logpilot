@@ -42,6 +42,7 @@ node dist/cli/index.js day
 - **`workpilot week`**：生成**本周**工作周报
 - **`workpilot month`**：生成**本月**工作月报
 - **`workpilot commit`**：根据代码 diff 由 AI 生成 commit message，可选自动提交
+- **`workpilot copy`**：将**标准输入**或 `--text` 中的文本写入**系统剪贴板**（可与日报等命令管道配合）
 
 所有报表类命令均支持：
 
@@ -236,9 +237,33 @@ workpilot commit
 
 ---
 
-## 6. 多仓库使用说明
+## 6. 复制到剪贴板：`workpilot copy`
 
-### 6.1 指定本地仓库路径
+**作用**：把一段文本写入系统剪贴板，便于粘贴到 IM、邮件或日报系统。
+
+**管道用法（常用）**：把前一个命令的标准输出直接复制进剪贴板：
+
+```bash
+workpilot day | workpilot copy
+workpilot week | workpilot copy
+```
+
+**直接指定文本**：
+
+```bash
+workpilot copy --text "今日已完成接口联调"
+```
+
+**说明**：
+
+- 成功时会在**标准错误**输出一行「已复制到剪贴板」，不会污染管道上游的纯文本输出。
+- **macOS** 使用 `pbcopy`；**Windows** 使用 PowerShell `Set-Clipboard`；**Linux** 依次尝试 `wl-copy`、`xclip`、`xsel`（需已安装其一）。
+
+---
+
+## 7. 多仓库使用说明
+
+### 7.1 指定本地仓库路径
 
 如果你在一个「非仓库」目录中，也可以通过 `--repo` 指定其他路径：
 
@@ -251,7 +276,7 @@ workpilot week --repo ../another-project
 
 ---
 
-## 7. 常见问题（FAQ）
+## 8. 常见问题（FAQ）
 
 - **Q1：为什么运行命令时提示没有 commit？**  
 **A：** workpilot 只会基于已有的 Git 提交记录生成报告。请确认：
@@ -280,13 +305,13 @@ workpilot week --repo ../another-project
 
 ---
 
-## 8. 推荐使用习惯
+## 9. 推荐使用习惯
 
 - 每次完成一小块功能：
   1. `git add .`
   2. `workpilot commit`（生成并确认提交说明）
 - 每天结束前：
-  - 在项目根目录执行 `workpilot day`，复制输出到你的日报系统；
+  - 在项目根目录执行 `workpilot day`，或使用 `workpilot day | workpilot copy` 直接写入剪贴板，再粘贴到你的日报系统；
 - 每周 / 每月总结：
   - 使用 `workpilot week` / `workpilot month`，快速整理阶段性成果。
 
