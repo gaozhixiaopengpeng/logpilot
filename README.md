@@ -147,8 +147,8 @@ Inference:
 
 ## CLI language (UI) vs report language (`--lang`)
 
-- **Terminal UI** (help text, errors, hints, loading lines): **English or Chinese** from your OS locale (`LANG` / `LC_*` / `Intl`). Chinese locales → Chinese UI; otherwise English.
-- **`day` / `week` / `month --lang`**: still controls **model output language** for the report only (unchanged). It does **not** switch the CLI chrome.
+- **Terminal UI** (help text, errors, hints, loading lines, and the **printed report title line** before the model output): **English or Chinese** from your OS locale (`LANG` / `LC_*` / `Intl`). Chinese locales → Chinese UI; otherwise English. You usually **do not** need to set these variables manually—the OS or shell sets them; the CLI reads them for POSIX-compatible locale detection.
+- **`day` / `week` / `month --lang`**: controls **model-generated report body** language. If omitted, the body language **matches the terminal UI locale** (English UI → English body, Chinese UI → Chinese body). It does **not** switch the CLI chrome or the printed title line (those follow the UI locale above).
 
 ---
 

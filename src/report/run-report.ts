@@ -22,7 +22,7 @@ export async function runReport(
   const ui = getUiMessages();
   const commits = await getCommits(repo, since, until);
   if (commits.length === 0) {
-    const title = formatReportTitle(titleKind, language);
+    const title = formatReportTitle(titleKind);
     const rest = ui.reportNoCommitsInRange;
     const full = title + rest;
     process.stdout.write(title);
@@ -51,7 +51,7 @@ export async function runReport(
     }
   }
   stopLoading();
-  const header = '\n' + formatReportTitle(titleKind, language) + '\n\n';
+  const header = '\n' + formatReportTitle(titleKind) + '\n\n';
   const body = report + '\n';
   const full = header + body;
   process.stdout.write(header);

@@ -4,6 +4,7 @@ import {
   descPostActionCopyReport,
   runWithCopyPostAction,
 } from './copy-support.js';
+import { defaultReportLanguageCode } from '../i18n/ui-locale.js';
 import { getUiMessages } from '../i18n/ui-messages.js';
 import {
   runReport,
@@ -61,7 +62,7 @@ export function registerReportCommands(
           until,
           'daily',
           titleKind,
-          opts.lang
+          opts.lang ?? defaultReportLanguageCode()
         );
       });
     }
@@ -97,7 +98,14 @@ export function registerReportCommands(
       await runWithCopyPostAction(cliName, spec.name, postAction, async () => {
         applyProvider(opts.provider);
         const { since, until } = spec.range();
-        return runReport(opts.repo, since, until, spec.prompt, spec.title, opts.lang);
+        return runReport(
+          opts.repo,
+          since,
+          until,
+          spec.prompt,
+          spec.title,
+          opts.lang ?? defaultReportLanguageCode()
+        );
       });
     });
   }

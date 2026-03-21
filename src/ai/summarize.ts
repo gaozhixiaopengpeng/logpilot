@@ -2,6 +2,7 @@ import axios from 'axios';
 import { readFile } from 'fs/promises';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
+import { defaultReportLanguageCode } from '../i18n/ui-locale.js';
 import { getUiMessages } from '../i18n/ui-messages.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -83,7 +84,7 @@ async function loadPrompt(
   let finalText = text
     .replace(/\{\{COMMIT_LIST\}\}/g, commitList)
     .replace(/\{\{DIFF_BLOCK\}\}/g, diffBlock || '(无 diff 摘要)');
-  const lang = (language || 'zh').toLowerCase();
+  const lang = (language ?? defaultReportLanguageCode()).toLowerCase();
   if (lang !== 'zh') {
     const langTag = lang;
     const langNote =
