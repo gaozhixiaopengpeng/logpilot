@@ -1,7 +1,14 @@
 # workpilot
 
-Tell the story of your work through code.  
-`workpilot` is an AI CLI that reads Git commits and code changes to produce ready-to-share daily / weekly / monthly reports, and commit messages from diffs.
+Tell the story of your work through code.
+
+Turn Git commits into **ready-to-share** work reports. `workpilot` is an AI CLI that reads your Git history and code changes to produce:
+
+- **Daily / weekly / monthly** summaries
+- **Clean commit messages** from diffs
+- **Developer-friendly wording** for non-technical readers
+
+Perfect for **daily standups, status updates, and progress tracking**—without another web app or vendor lock-in.
 
 **Languages:** This file is English by default. [简体中文](README.zh-CN.md)
 
@@ -12,22 +19,44 @@ Tell the story of your work through code.
 
 ---
 
-## Why workpilot
+## Demo
 
-- Less repetitive reporting: turn scattered commits into structured summaries
-- Clearer communication: technical changes explained for non-technical readers
-- Better commits: diff-based, convention-friendly messages
-- Pure CLI: no UI or vendor lock-in; works with local and air-gapped repos
+You finish coding for the day. Your manager asks:
+
+> “What did you work on today?”
+
+Instead of digging through commits:
+
+```bash
+workpilot day
+```
+
+Example output:
+
+```text
+Today's Work Summary:
+
+1. Shipped user login API and tightened error handling
+2. Fixed edge cases in checkout flow and added regression checks
+3. Improved list rendering; faster first paint
+4. Added order state machine and integration tests
+```
 
 ---
 
-## Cost profile (low and predictable)
+## Why workpilot
 
-> On the order of **a few cents per hundred runs** for typical small prompts and light models; actual cost depends on model, tokens, and your gateway.
+- **Less repetitive reporting:** turn scattered commits into structured summaries
+- **Clearer communication:** technical changes explained for non-technical readers
+- **Better commits:** diff-based, convention-friendly messages
+- **Pure CLI:** no UI or vendor lock-in; works with local and air-gapped repos
 
-- Each daily report usually uses a small number of tokens
-- Teams can centralize spend via gateway policy
-- Start with a small pilot, then tune model and prompts monthly
+### Compared to Cursor and similar tools
+
+- **Report-first, not chat-first:** turns Git history into standup-ready summaries; it is not a general in-editor assistant.
+- **Bring your own API key:** pay per run at API rates—no need to bundle an IDE subscription just for this workflow.
+- **Runs wherever Git runs:** terminal, scripts, or automation without tying output to a specific editor or hosted workspace.
+- **Lightweight and fast:** a focused CLI—no heavy IDE or chat app to launch; short path from command to output, ideal for quick standup-style reports.
 
 ---
 
@@ -76,39 +105,58 @@ export AI_PROVIDER=openai
 workpilot day
 ```
 
+Done.
+
 ---
 
 ## Common commands
 
 You may replace **`workpilot`** with **`wp`** in any command.
 
+### Reports
+
 ```bash
 workpilot day
-workpilot day copy
-workpilot copy
-workpilot day --date 2026-03-10
 workpilot week
 workpilot month
+workpilot day --date 2026-03-10
+```
+
+### Version notes (release)
+```bash
+workpilot release <base>
+workpilot release <base1> <base2>
+```
+
+Examples:
+```bash
+workpilot release 0.1.0
+workpilot release v0.1.0
+workpilot release 0.1.0 0.1.3
+```
+
+Outputs are cached locally; run `workpilot copy` to copy the last release notes.
+
+### Commit messages
+
+```bash
 git add -A
 workpilot commit
+```
+
+### Clipboard helpers
+
+Append **`copy`** to write the same body to the system clipboard after printing (e.g. `workpilot week copy`, `workpilot commit --no-commit copy`).
+
+```bash
+workpilot day copy
 workpilot commit copy
+workpilot week copy
+workpilot copy
 workpilot day | workpilot copy
 ```
 
-**`day` / `week` / `month` / `commit`** accept a trailing **`copy`** (e.g. `workpilot week copy`, `workpilot commit --no-commit copy`) to write the **same body** to the system clipboard after printing. **`workpilot copy`** alone reads the local cache (`$XDG_CACHE_HOME/workpilot/last-report.txt`, or `~/.cache/workpilot/last-report.txt` when unset).
-
----
-
-## Example output
-
-```text
-Today's Work Summary:
-
-1. Shipped user login API and tightened error handling
-2. Fixed edge cases in checkout flow and added regression checks
-3. Improved list rendering; faster first paint
-4. Added order state machine and integration tests
-```
+**`workpilot copy`** alone reads the local cache (`$XDG_CACHE_HOME/workpilot/last-report.txt`, or `~/.cache/workpilot/last-report.txt` when unset).
 
 ---
 
@@ -116,8 +164,19 @@ Today's Work Summary:
 
 - End-of-day status in minutes
 - Weekly reviews and milestones
+- Team standups and manager updates
 - Mixed-language teams (Chinese-first reports with optional `--lang` for model output)
 - Side projects and steady progress logs
+
+---
+
+## Cost profile (low and predictable)
+
+> For typical small prompts and light models, often on the order of **a few mao per hundred runs** (tenths of a yuan; usually well under ¥1 per hundred runs); actual cost depends on model, tokens, and your gateway.
+
+- Each daily report usually uses a small number of tokens
+- Teams can centralize spend via gateway policy
+- Start with a small pilot, then tune model and prompts monthly
 
 ---
 
@@ -150,6 +209,12 @@ Inference:
 - **Terminal UI** (help text, errors, hints, loading lines, and the **printed report title line** before the model output): **English or Chinese** from your OS locale (`LANG` / `LC_*` / `Intl`). Chinese locales → Chinese UI; otherwise English. You usually **do not** need to set these variables manually—the OS or shell sets them; the CLI reads them for POSIX-compatible locale detection.
 - **`day` / `week` / `month --lang`**: controls **model-generated report body** language. If omitted, the body language **matches the terminal UI locale** (English UI → English body, Chinese UI → Chinese body). It does **not** switch the CLI chrome or the printed title line (those follow the UI locale above).
 
+Example:
+
+```bash
+workpilot day --lang zh
+```
+
 ---
 
 ## Requirements
@@ -161,6 +226,8 @@ Inference:
 ---
 
 ## Feedback
+
+Issues and suggestions are welcome.
 
 - Issues: <https://github.com/gaozhixiaopengpeng/work-pilot/issues>
 - Repo: <https://github.com/gaozhixiaopengpeng/work-pilot>
