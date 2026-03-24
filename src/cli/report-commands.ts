@@ -11,7 +11,11 @@ import {
   type ReportPromptName,
   type ReportTitleKind,
 } from '../report/run-report.js';
-import { runDingtalkAssist } from './dingtalk-command.js';
+import {
+  runDingtalkAssist,
+  runFeishuAssist,
+  runWecomAssist,
+} from './dingtalk-command.js';
 import {
   dayRange,
   monthRange,
@@ -25,8 +29,14 @@ type ReportOpts = {
   provider?: string;
   lang?: string;
   dingtalk?: boolean;
+  dingding?: boolean;
+  feishu?: boolean;
+  wecom?: boolean;
+  weixin?: boolean;
   appUrl?: string;
 };
+
+type ReportAssistKind = 'day' | 'week' | 'month';
 
 function withReportArguments(cmd: Command, description: string): Command {
   return cmd.description(description).argument(
@@ -41,6 +51,10 @@ function withReportOptions(cmd: Command): Command {
     .option('-r, --repo <path>', ui.optRepoPath, process.cwd())
     .option('--lang <code>', ui.optLangHelp)
     .option('--dingtalk', ui.optDingtalkAssist)
+    .option('--dingding', ui.optDingdingCompat)
+    .option('--feishu', ui.optFeishuSupport)
+    .option('--wecom', ui.optWecomSupport)
+    .option('--weixin', ui.optWeixinCompat)
     .option('--app-url <url>', ui.optDingtalkAppUrl)
     .option('--provider <name>', ui.optProvider);
 }
@@ -73,8 +87,14 @@ export function registerReportCommands(
           titleKind,
           opts.lang ?? defaultReportLanguageCode()
         );
-        if (opts.dingtalk) {
-          await runDingtalkAssist(fullText, opts.appUrl);
+        if (opts.dingtalk || opts.dingding) {
+          await runDingtalkAssist(fullText, 'day', opts.appUrl);
+        }
+        if (opts.feishu) {
+          await runFeishuAssist(fullText, 'day');
+        }
+        if (opts.wecom || opts.weixin) {
+          await runWecomAssist(fullText, 'day');
         }
         return fullText;
       });
@@ -87,6 +107,7 @@ export function registerReportCommands(
     range: () => IsoTimeRange;
     prompt: ReportPromptName;
     title: ReportTitleKind;
+    assistKind: ReportAssistKind;
   }> = [
     {
       name: 'week',
@@ -94,6 +115,7 @@ export function registerReportCommands(
       range: weekRange,
       prompt: 'weekly',
       title: 'week',
+      assistKind: 'week',
     },
     {
       name: 'month',
@@ -101,6 +123,7 @@ export function registerReportCommands(
       range: monthRange,
       prompt: 'monthly',
       title: 'month',
+      assistKind: 'month',
     },
   ];
 
@@ -119,8 +142,14 @@ export function registerReportCommands(
           spec.title,
           opts.lang ?? defaultReportLanguageCode()
         );
-        if (opts.dingtalk) {
-          await runDingtalkAssist(fullText, opts.appUrl);
+        if (opts.dingtalk || opts.dingding) {
+          await runDingtalkAssist(fullText, spec.assistKind, opts.appUrl);
+        }
+        if (opts.feishu) {
+          await runFeishuAssist(fullText, spec.assistKind);
+        }
+        if (opts.wecom || opts.weixin) {
+          await runWecomAssist(fullText, spec.assistKind);
         }
         return fullText;
       });

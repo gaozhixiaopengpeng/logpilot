@@ -120,22 +120,30 @@ workpilot day
 workpilot week
 workpilot month
 workpilot day --date 2026-03-10
+workpilot day --dingtalk
+workpilot week --dingtalk
+workpilot month --dingtalk
+workpilot day --dingding
+workpilot week --dingding
+workpilot month --dingding
+workpilot day --feishu
+workpilot week --feishu
+workpilot month --feishu
+workpilot day --wecom
+workpilot week --wecom
+workpilot month --wecom
+workpilot day --weixin
+workpilot week --weixin
+workpilot month --weixin
 ```
 
-### Version notes (release)
-```bash
-workpilot release <base>
-workpilot release <base1> <base2>
-```
+Notes:
 
-Examples:
-```bash
-workpilot release 0.1.0
-workpilot release v0.1.0
-workpilot release 0.1.0 0.1.3
-```
-
-Outputs are cached locally; run `workpilot copy` to copy the last release notes.
+- `--dingtalk` works with `day` / `week` / `month` and launches DingTalk app assist after generation.
+- `--dingding` is an alias of `--dingtalk`.
+- `--wecom` works with `day` / `week` / `month` and launches WeCom app assist after generation.
+- `--weixin` is an alias of `--wecom`.
+- `--feishu` works with `day` / `week` / `month` and launches Feishu app assist after generation.
 
 ### Commit messages
 

@@ -119,22 +119,30 @@ workpilot day
 workpilot week
 workpilot month
 workpilot day --date 2026-03-10
+workpilot day --dingtalk
+workpilot week --dingtalk
+workpilot month --dingtalk
+workpilot day --dingding
+workpilot week --dingding
+workpilot month --dingding
+workpilot day --feishu
+workpilot week --feishu
+workpilot month --feishu
+workpilot day --wecom
+workpilot week --wecom
+workpilot month --wecom
+workpilot day --weixin
+workpilot week --weixin
+workpilot month --weixin
 ```
 
-### 版本说明（release）
-```bash
-workpilot release <base>
-workpilot release <base1> <base2>
-```
+说明：
 
-示例：
-```bash
-workpilot release 0.1.0
-workpilot release v0.1.0
-workpilot release 0.1.0 0.1.3
-```
-
-输出会写入本机缓存，后续可用 `workpilot copy` 直接复制上一次版本说明。
+- `--dingtalk` 可用于 `day` / `week` / `month`，会在生成后拉起钉钉客户端辅助发送。
+- `--dingding` 是 `--dingtalk` 的兼容别名。
+- `--wecom` 可用于 `day` / `week` / `month`，会在生成后拉起企业微信客户端辅助发送。
+- `--weixin` 是 `--wecom` 的兼容别名。
+- `--feishu` 可用于 `day` / `week` / `month`，会在生成后拉起飞书客户端辅助发送。
 
 ### Commit message
 
