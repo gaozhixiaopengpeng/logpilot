@@ -168,10 +168,21 @@ wp month
 wp day --lang zh
 ```
 
-Specify date:
+Specify time selection:
 
 ```bash
-wp day --date 2026-03-10
+# Daily
+wp day last                  # yesterday
+wp day 2026-03-10            # exact day
+wp day --from 2026-03-01 --to 2026-03-10
+
+# Weekly
+wp week last                 # last full week (Mon–Sun)
+wp week 2026-W16
+
+# Monthly
+wp month last                # last full month
+wp month Mar
 ```
 
 Control output language:
@@ -245,7 +256,7 @@ The report content is also copied to clipboard for quick paste.
 Generate a report and copy it:
 
 ```bash
-wp day --date 2026-03-10 copy
+wp day 2026-03-10 copy
 ```
 
 Generate a commit message:

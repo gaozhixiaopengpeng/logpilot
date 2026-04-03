@@ -90,24 +90,81 @@ workpilot day
 
 ---
 
-## 2. 指定日期日报：`workpilot day --date`
+## 2. 日报时间选择：`workpilot day [<input>]`
 
-**作用**：补生成指定日期的日报，例如忘记写某天日报时使用。
+**作用**：生成日报；不填 `<input>` 表示“当天”，填了则按解析规则生成“昨天/任意一天/指定范围”的日报。
 
-**可选参数：**
+### 2.1 单日输入支持
 
-- `-d, --date <yyyy-mm-dd>`：指定日期（按本地时间从当天 00:00 到次日 00:00 的 commit；留空则为今天）
+| 输入 | 含义 |
+|------|------|
+| `today` | 今天 |
+| `last` | 昨天（推荐；等价于 `yesterday` alias） |
+| `2026-03-12` | 标准格式（推荐） |
+| `20260312` | 紧凑格式 |
+| `12/03/2026` | 欧式格式 |
+| `yesterday` | 昨天（alias，不推荐） |
 
-**示例：**
+模糊输入（会先提示你最终解析为哪一天）：
 
-```bash
-workpilot day --date 2026-03-10
+ - `workpilot day 0312`：解析为 `当前年份-03-12`
+ - `workpilot day 12`：解析为 `当前年月-12`（且仅允许 `<= 当前日期`）
+
+不支持（歧义过大）：
+
+```text
+workpilot day 3/12
 ```
 
-**配合其他选项使用：**
+### 2.2 时间范围（日报）
+
+方式一（推荐）：
 
 ```bash
-workpilot day --date 2026-03-10 --repo /path/to/project --lang en
+workpilot day --from 2026-03-01 --to 2026-03-10
+```
+
+方式二（简写）：
+
+```bash
+workpilot day 1-10
+```
+→ 当前月 1 号到 10 号
+
+### 2.3 解析提示与调试
+
+非精确输入会先在 **stderr** 输出解析结果，例如：
+
+```text
+Parsed as: 2026-04-12
+```
+
+调试解析（不生成报告）：
+
+```bash
+workpilot day 12 --dry-run
+```
+
+解析失败会提示 `Did you mean:` 候选项。
+
+### 2.4 兼容旧参数：`--date YYYY-MM-DD`
+
+若仍输入 `--date YYYY-MM-DD`，工具只会提示改用：
+
+```text
+workpilot day YYYY-MM-DD
+```
+
+并且**不进行解析**旧 `--date` 参数。
+
+### 2.5 示例
+
+```bash
+workpilot day
+workpilot day last
+workpilot day 2026-03-10
+workpilot day 0312
+workpilot day --from 2026-03-01 --to 2026-03-10
 ```
 
 ---
@@ -134,6 +191,45 @@ workpilot week --repo /path/to/project --lang en
 - 从本周一本地时间 00:00 起，统计到当前这一天结束（本地时间次日 00:00）。
 
 ---
+### 3.1 周报时间选择：`workpilot week [<input>]`
+
+省略 `<input>` 表示 **本周**（与默认行为一致）。
+
+#### 单值输入（与 `--from/--to` 互斥）
+
+推荐/别名：
+
+```text
+last      -> 上一整周（周一–周日）
+lastweek  -> last 的别名
+thisweek  -> 默认行为的别名
+```
+
+ISO 周格式：
+
+```text
+16        -> 当前年 ISO 第 16 周
+16week    -> 同 16
+2026-W16  -> 精确 ISO 周
+```
+
+非精确输入会先在 **stderr** 输出 `解析为: ...` 提示，再生成报表正文。
+
+#### 时间范围（周到周）
+
+```bash
+workpilot week --from 2026-W10 --to 2026-W16
+```
+
+使用 `--from/--to` 时请省略 `<input>`。
+
+#### 调试解析
+
+```bash
+workpilot week 16 --dry-run
+```
+
+---
 
 ## 4. 本月月报：`workpilot month`
 
@@ -155,6 +251,61 @@ workpilot month --repo /path/to/project --lang en
 
 - 从本月 1 号本地时间 00:00 开始；  
 - 截止到当前这一天结束（本地时间次日 00:00）。
+
+---
+### 4.1 月报时间选择：`workpilot month [<input>]`
+
+省略 `<input>` 表示 **本月**（与默认行为一致）。
+
+#### 单值输入（与 `--from/--to` 互斥）
+
+推荐/别名：
+
+```text
+last       -> 上一整月（自然月）
+lastmonth  -> last 的别名
+thismonth  -> 默认行为的别名
+```
+
+月格式：
+
+```text
+03        -> 当前年 3 月
+3         -> 同 03
+2026-03   -> 精确年-月
+Mar       -> 当前年 3 月
+```
+
+非精确输入会先在 **stderr** 输出 `解析为: ...` 提示，再生成报表正文。
+
+#### 时间范围
+
+范围写法：
+```bash
+workpilot month --from 2026-01 --to 2026-03
+```
+
+简写（仅当前年）：
+```bash
+workpilot month 1-3
+```
+
+使用 `--from/--to` 时请省略 `<input>`。
+
+#### 调试解析
+
+```bash
+workpilot month Mar --dry-run
+```
+
+#### 示例
+
+```bash
+workpilot month last
+workpilot month 2026-03
+workpilot month 1-3
+workpilot month --from 2026-01 --to 2026-03
+```
 
 ---
 
@@ -259,7 +410,7 @@ workpilot commit
 workpilot day copy
 workpilot week copy
 workpilot month copy
-workpilot day --date 2026-03-10 copy
+workpilot day 2026-03-10 copy
 workpilot commit copy
 ```
 
@@ -319,7 +470,7 @@ workpilot week --repo ../another-project
 **A：** workpilot 只会基于已有的 Git 提交记录生成报告。请确认：
   - 当前（或指定的）仓库已经初始化为 Git 仓库；
   - 在目标时间范围内（例如今天）确实有 commit；
-  - 你传入的 `--date` 参数格式正确（`YYYY-MM-DD`）。
+  - 你传入的日期输入格式正确（例如 `YYYY-MM-DD`）。
 
 - **Q2：为什么 AI 相关命令失败或提示 Key / 提供方错误？**  
   **A：** 请检查环境变量是否已正确配置：

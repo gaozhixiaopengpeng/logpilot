@@ -94,24 +94,83 @@ workpilot day
 
 ---
 
-## 2. Daily report for a specific date: `workpilot day --date`
+## 2. Daily report time selection: `workpilot day [<input>]`
 
-**Purpose**: Backfill a daily report for a specified date. For example, use this when you forgot to write a report for that day.
+**Purpose**: Generate a daily report. If you omit `<input>`, it means “today”. If you provide `<input>`, the tool uses the parsing rules to generate “yesterday / any single day / a specified range”.
 
-**Optional parameter**:
+### 2.1 Single-day input
 
-- `-d, --date <yyyy-mm-dd>`: specify the date (by local time: from 00:00 on that day to 00:00 on the next day; leaving it empty means “today”)
+Recommended inputs (all interpreted in your local timezone):
 
-**Example**:
+| Input | Meaning |
+|------|---------|
+| `today` | Today |
+| `last` | Yesterday (recommended; same as `yesterday` alias) |
+| `2026-03-12` | Standard format (recommended) |
+| `20260312` | Compact format |
+| `12/03/2026` | European format |
+| `yesterday` | Yesterday (alias, not recommended) |
 
-```bash
-workpilot day --date 2026-03-10
+Fuzzy inputs (the tool will show you what it parsed as):
+
+- `workpilot day 0312` → `current_year-03-12`
+- `workpilot day 12` → `current_year-current_month-12` (only allowed if `<= current date`)
+
+Not supported (too ambiguous):
+
+```text
+workpilot day 3/12
 ```
 
-**Use together with other options**:
+### 2.2 Time range (daily)
+
+Way 1 (recommended):
 
 ```bash
-workpilot day --date 2026-03-10 --repo /path/to/project --lang en
+workpilot day --from 2026-03-01 --to 2026-03-10
+```
+
+Way 2 (shorthand):
+
+```bash
+workpilot day 1-10
+```
+→ 1st to 10th of the current month
+
+### 2.3 Parsing hint and debug
+
+All non-exact inputs show the parsed result first (to **stderr**), for example:
+
+```text
+Parsed as: 2026-04-12
+```
+
+Debug parsing (no report generation):
+
+```bash
+workpilot day 12 --dry-run
+```
+
+If parsing fails, it will show `Did you mean:` candidates.
+
+### 2.4 Backward compatibility: `--date YYYY-MM-DD`
+
+If you still pass `--date YYYY-MM-DD`, the tool will only suggest switching to:
+
+```text
+workpilot day YYYY-MM-DD
+```
+
+and it will **not parse** the old `--date` parameter.
+
+### 2.5 Examples
+
+```bash
+workpilot day
+workpilot day last
+workpilot day 2026-03-10
+workpilot day 0312
+workpilot day --from 2026-03-01 --to 2026-03-10
 ```
 
 ---
@@ -137,6 +196,44 @@ workpilot week --repo /path/to/project --lang en
 - The week starts on **Monday**
 - From **00:00 of this week** (local time) until the end of **today** (local time next day 00:00)
 
+### 3.1 Weekly time selection: `workpilot week [<input>]`
+
+If you omit `<input>`, it means **this week**.
+
+#### Single input (mutually exclusive with `--from/--to`)
+
+Recommended / aliases:
+
+```text
+last      -> previous full week (Mon–Sun)
+lastweek  -> alias of last
+thisweek  -> alias of the default behavior
+```
+
+ISO week formats:
+
+```text
+16        -> ISO week 16 of the current year
+16week    -> same as 16
+2026-W16  -> exact ISO week
+```
+
+Non-exact inputs will print a `Parsed as: ...` hint (to **stderr**) before the report.
+
+#### Time range (week-to-week)
+
+```bash
+workpilot week --from 2026-W10 --to 2026-W16
+```
+
+When using `--from/--to`, omit `<input>`.
+
+#### Debug parsing
+
+```bash
+workpilot week 16 --dry-run
+```
+
 ---
 
 ## 4. Monthly report: `workpilot month`
@@ -159,6 +256,61 @@ workpilot month --repo /path/to/project --lang en
 
 - From **00:00 on the 1st of this month** (local time)
 - Until the end of **today** (local time next day 00:00)
+
+---
+### 4.1 Monthly time selection: `workpilot month [<input>]`
+
+If you omit `<input>`, it means **this month**.
+
+#### Single input (mutually exclusive with `--from/--to`)
+
+Recommended / aliases:
+
+```text
+last       -> previous full calendar month
+lastmonth  -> alias of last
+thismonth  -> alias of the default behavior
+```
+
+Month formats:
+
+```text
+03        -> March of the current year
+3         -> same as 03
+2026-03   -> exact year-month
+Mar       -> March of the current year
+```
+
+Non-exact inputs will print a `Parsed as: ...` hint (to **stderr**) before the report.
+
+#### Time range
+
+Range syntax:
+```bash
+workpilot month --from 2026-01 --to 2026-03
+```
+
+Shorthand (current year only):
+```bash
+workpilot month 1-3
+```
+
+When using `--from/--to`, omit `<input>`.
+
+#### Debug parsing
+
+```bash
+workpilot month Mar --dry-run
+```
+
+#### Examples
+
+```bash
+workpilot month last
+workpilot month 2026-03
+workpilot month 1-3
+workpilot month --from 2026-01 --to 2026-03
+```
 
 ---
 
@@ -272,7 +424,7 @@ Add the word **`copy`** at the end of the command. It will print the normal term
 workpilot day copy
 workpilot week copy
 workpilot month copy
-workpilot day --date 2026-03-10 copy
+workpilot day 2026-03-10 copy
 workpilot commit copy
 ```
 
@@ -334,7 +486,7 @@ workpilot week --repo ../another-project
 
   - The (specified) repository is initialized as a Git repository.
   - In the target time range (e.g., “today”), there are actually commits.
-  - Your `--date` format is correct (`YYYY-MM-DD`).
+ - Your date input format is correct (e.g. `YYYY-MM-DD`).
 
 - **Q2: Why do AI-related commands fail, or show Key/provider errors?**
 

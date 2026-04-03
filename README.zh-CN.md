@@ -168,10 +168,21 @@ wp month
 wp day --lang zh
 ```
 
-指定日期：
+时间选择：
 
 ```bash
-wp day --date 2026-03-10
+# 日报
+wp day last                  # 昨天
+wp day 2026-03-10           # 精确日期
+wp day --from 2026-03-01 --to 2026-03-10
+
+# 周报
+wp week last                 # 上一整周（周一–周日）
+wp week 2026-W16
+
+# 月报
+wp month last                # 上一整月
+wp month Mar
 ```
 
 控制输出语言：
@@ -245,7 +256,7 @@ wp month --wecom # wp month --weixin
 生成报告并复制：
 
 ```bash
-wp day --date 2026-03-10 copy
+wp day 2026-03-10 copy
 ```
 
 生成提交信息：
